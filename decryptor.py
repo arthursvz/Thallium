@@ -14,17 +14,43 @@ def derive_key(password: bytes, salt: bytes) -> bytes:
 def decrypt_file(encrypted_file_path, password, output_file_path):
     with open(encrypted_file_path, 'rb') as f:
         filedata = f.read()
-    salt = filedata[:16]
-    nonce = filedata[16:28]
-    ciphertext = filedata[28:]
+    # Détection automatique : avec ou sans salt
+    if len(filedata) >= 28:
+        salt = filedata[:16]
+        nonce = filedata[16:28]
+        ciphertext = filedata[28:]
+    else:
+        salt = b'\x00' * 16
+        nonce = filedata[:12]
+        ciphertext = filedata[12:]
     key = derive_key(password.encode(), salt)
     aesgcm = AESGCM(key)
     decrypted = aesgcm.decrypt(nonce, ciphertext, None)
     with open(output_file_path, 'wb') as f:
         f.write(decrypted)
+
+def try_decrypt(filedata, password_candidate):
+    # Détection automatique : si le fichier commence par 16 octets de salt (mode normal), sinon mode -light
+    if len(filedata) >= 28:
+        salt = filedata[:16]
+        nonce = filedata[16:28]
+        ciphertext = filedata[28:]
+    else:
+        salt = b'\x00' * 16
+        nonce = filedata[:12]
+        ciphertext = filedata[12:]
+    try:
+        key = derive_key(password_candidate.encode(), salt)
+        aesgcm = AESGCM(key)
+        decrypted = aesgcm.decrypt(nonce, ciphertext, None)
+        return decrypted
+    except Exception as e:
+        print("Erreur de déchiffrement :", e)
+        return None
+
 if __name__ == "__main__":
-    # Set data root
-    DATA_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+    # Set data root to current directory
+    DATA_ROOT = os.path.abspath(os.getcwd())
 
     print(r"""
     _________________________________________________________________
@@ -53,7 +79,7 @@ if __name__ == "__main__":
     import sys
     choice = input("Do you want to decrypt a file or a folder? (f/d): ").strip().lower()
     if choice == 'f':
-        encrypted_file = input("Path to the encrypted file (relative to data/): ").strip()
+        encrypted_file = input("Path to the encrypted file (relative to current directory): ").strip()
         abs_encrypted_file = os.path.join(DATA_ROOT, encrypted_file)
         key_input_mode = input("Is the decryption key in a file? (y/n): ").strip().lower()
         if key_input_mode == 'y':
@@ -66,7 +92,7 @@ if __name__ == "__main__":
                 key_file = key_file_guess
                 print(f"Key automatically detected: {key_file}")
             else:
-                key_file = input("Path to the key file (relative to data/): ").strip()
+                key_file = input("Path to the key file (relative to current directory): ").strip()
                 key_file = os.path.join(DATA_ROOT, key_file)
             with open(key_file, 'r') as f:
                 password = f.read().strip()
@@ -86,9 +112,10 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Error during decryption: {e}")
         # Offer to clean up associated .enc and .key files
-        resp = input("Do you want to delete the associated .enc and .key files? (y/N): ").strip().lower()
+        resp = input("Do you want to delete the encrypted (.enc) and key (.key) files? (y/N): ").strip().lower()
         if resp == 'y':
-            for f in [abs_encrypted_file, original_name + '.key']:
+            # Only delete the .enc and .key files, NOT the decoded or original file
+            for f in [abs_encrypted_file, abs_encrypted_file[:-4] + '.key']:
                 if os.path.isfile(f):
                     try:
                         os.remove(f)
@@ -96,7 +123,7 @@ if __name__ == "__main__":
                     except Exception as e:
                         print(f"Error deleting {f}: {e}")
     elif choice == 'd':
-        dirpath = input("Path to the folder to decrypt (relative to data/): ").strip()
+        dirpath = input("Path to the folder to decrypt (relative to current directory): ").strip()
         abs_dirpath = os.path.join(DATA_ROOT, dirpath)
         if not os.path.isdir(abs_dirpath):
             print("Folder not found.")

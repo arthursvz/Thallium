@@ -8,17 +8,17 @@ def derive_key(password: bytes, salt: bytes) -> bytes:
     kdf = Scrypt(salt=salt, length=32, n=2**14, r=8, p=1)
     return kdf.derive(password)
 
-def encrypt_file(filepath: str, password: str, output_dir: str):
+def encrypt_file(filepath: str, password: str, output_dir: str, use_salt=True):
     # Read file data
     with open(filepath, 'rb') as f:
         data = f.read()
 
     # Generate salt and nonce
-    salt = os.urandom(16)
+    salt = os.urandom(16) if use_salt else b''
     nonce = os.urandom(12)
 
     # Derive key
-    key = derive_key(password.encode(), salt)
+    key = derive_key(password.encode(), salt) if use_salt else derive_key(password.encode(), b'\x00'*16)
 
     # Encrypt data
     aesgcm = AESGCM(key)
@@ -29,12 +29,17 @@ def encrypt_file(filepath: str, password: str, output_dir: str):
     outpath = os.path.join(output_dir, rel_path + '.enc')
     os.makedirs(os.path.dirname(outpath), exist_ok=True)
     with open(outpath, 'wb') as f:
-        f.write(salt + nonce + encrypted)
+        f.write(salt + nonce + encrypted if use_salt else nonce + encrypted)
     print(f"Encrypted file: {outpath}")
 if __name__ == "__main__":
-    # Set data root and output directory
-    DATA_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
-    OUTPUT_ROOT = DATA_ROOT  # Output encrypted files to data as well
+    # Set data root and output directory to current directory
+    DATA_ROOT = os.path.abspath(os.getcwd())
+    OUTPUT_ROOT = DATA_ROOT  # Output encrypted files to current directory
+
+    use_salt = True
+    if "-light" in sys.argv:
+        use_salt = False
+        sys.argv.remove("-light")
 
     print(r"""
     _________________________________________________________________
@@ -63,7 +68,7 @@ if __name__ == "__main__":
     import base64
     choice = input("Do you want to encrypt a file or a folder? (f/d): ").strip().lower()
     if choice == 'f':
-        filepath = input("Path to the file to encrypt (relative to data/): ").strip()
+        filepath = input("Path to the file to encrypt (relative to current directory): ").strip()
         abs_filepath = os.path.join(DATA_ROOT, filepath)
         if not os.path.isfile(abs_filepath):
             print("File not found.")
@@ -85,9 +90,9 @@ if __name__ == "__main__":
             with open(keyfile, 'w') as f:
                 f.write(password)
             print(f"Key generated and saved in: {keyfile}")
-        encrypt_file(abs_filepath, password, OUTPUT_ROOT)
+        encrypt_file(abs_filepath, password, OUTPUT_ROOT, use_salt)
     elif choice == 'd':
-        dirpath = input("Path to the folder to encrypt (relative to data/): ").strip()
+        dirpath = input("Path to the folder to encrypt (relative to current directory): ").strip()
         abs_dirpath = os.path.join(DATA_ROOT, dirpath)
         if not os.path.isdir(abs_dirpath):
             print("Folder not found.")
@@ -131,7 +136,7 @@ if __name__ == "__main__":
                 if fpath.endswith('.enc') or fpath.endswith('.key'):
                     continue  # Do not encrypt already encrypted files or keys
                 print(f"Encrypting: {fpath}")
-                encrypt_file(fpath, get_password(fpath), OUTPUT_ROOT)
+                encrypt_file(fpath, get_password(fpath), OUTPUT_ROOT, use_salt)
         print("All files in the folder and its subfolders have been encrypted.")
     else:
         print("Invalid choice. Please answer with 'f' or 'd'.")

@@ -1,12 +1,14 @@
 import os
 
-def is_key_file(filename):
-    key_extensions = ['.key', '.pem', '.crt', '.cer', '.der', '.pfx', '.p12']
-    return any(filename.lower().endswith(ext) for ext in key_extensions)
-
-def is_encrypted_file(filename):
-    encrypted_extensions = ['.enc', '.gpg', '.aes', '.crypt', '.vault']
-    return any(filename.lower().endswith(ext) for ext in encrypted_extensions)
+def should_keep(filename):
+    keep_extensions = ['.py']
+    keep_names = ['README', 'README.md', 'LICENSE', 'LICENSE.txt']
+    base = os.path.basename(filename)
+    if base.lower() in [n.lower() for n in keep_names]:
+        return True
+    if any(base.lower().endswith(ext) for ext in keep_extensions):
+        return True
+    return False
 
 def confirm_and_delete(filepath):
     resp = input(f"Supprimer '{filepath}' ? (o/N): ").strip().lower()
@@ -19,17 +21,21 @@ def confirm_and_delete(filepath):
     else:
         print(f"Conservé: {filepath}")
 
-
 def clean_folder(folder):
     for root, _, files in os.walk(folder):
+        # Ignore tout ce qui est dans .git
+        if '.git' in root.split(os.sep):
+            continue
         for filename in files:
             filepath = os.path.join(root, filename)
-            if is_key_file(filename) or is_encrypted_file(filename):
+            if not should_keep(filename):
                 confirm_and_delete(filepath)
+            else:
+                print(f"Conservé: {filepath}")
 
 def main():
     import sys
-    DATA_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+    DATA_ROOT = os.path.abspath(os.getcwd())
     if len(sys.argv) > 1:
         rel_folder = sys.argv[1]
         folder = os.path.join(DATA_ROOT, rel_folder)
