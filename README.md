@@ -21,7 +21,20 @@ Suite d'outils modernes et sécurisés pour la gestion, la protection et l'authe
 
 ## 🚀 Fonctionnalités principales
 
-### `encryptor.py` — Chiffrement/déchiffrement
+
+### `secure_bundle.py` — Chiffrement, signature, vérification et gestion de clé tout-en-un
+- Chiffre et signe un ou plusieurs fichiers/dossiers (récursivement) avec AES-GCM et signature SHA256
+- Ajoute des métadonnées personnalisées (auteur, lieu, message, date, heure)
+- Génère, sauvegarde et recharge automatiquement la clé (format base64, 32 octets)
+- Permet de vérifier la signature, d'afficher les métadonnées et de déchiffrer les fichiers
+- Propose la suppression sécurisée des fichiers originaux, des fichiers chiffrés et de la clé (avec avertissements)
+- Utilisation simple :
+  ```bash
+  python3 secure_bundle.py
+  ```
+- Toutes les interactions et messages sont en anglais
+
+### `encryptor.py` — Chiffrement/déchiffrement (ancien)
 - Chiffre des fichiers et dossiers (récursivement) avec AES-GCM
 - Choix de la clé : unique, par fichier, ou auto-générée par dossier
 - Suppression sécurisée des fichiers originaux après chiffrement (optionnelle)
@@ -53,15 +66,20 @@ Suite d'outils modernes et sécurisés pour la gestion, la protection et l'authe
 ---
 
 
+
 ## 🛠️ Utilisation rapide
 
 1. Placez vos fichiers/dossiers à protéger dans le dossier de travail
 2. Lancez le script souhaité selon votre besoin :
-   - Chiffrement :
+   - Chiffrement, signature, vérification, gestion de clé (recommandé) :
+     ```bash
+     python3 secure_bundle.py
+     ```
+   - Chiffrement (ancien) :
      ```bash
      python3 encryptor.py
      ```
-   - Déchiffrement :
+   - Déchiffrement (ancien) :
      ```bash
      python3 decryptor.py
      ```
@@ -73,7 +91,7 @@ Suite d'outils modernes et sécurisés pour la gestion, la protection et l'authe
      ```bash
      python3 bruteforce.py
      ```
-   - Authentification (signature/vérification) :
+   - Authentification (signature/vérification, ancien) :
      ```bash
      python3 authenticator.py
      ```
