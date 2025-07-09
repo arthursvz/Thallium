@@ -71,6 +71,36 @@ def verify_signature(file_path, secret_key):
         # Debug: print(e)
         return False, None
 
+def select_file_or_folder(base_path="."):
+    import os
+    exclude_files = {"authenticator.py", "bruteforce_signature.py", "bruteforce.py", "cleaner.py", "decryptor.py", "encryptor.py", "LICENSE", "README.md", "secure_bundle.py", "test.py"}
+    while True:
+        entries = [f for f in os.listdir(base_path) if not f.startswith(".") and f not in exclude_files]
+        entries = sorted(entries, key=lambda x: (os.path.isdir(os.path.join(base_path, x)), x.lower()), reverse=True)
+        entries = [".. (parent directory)"] + entries
+        print("\nSélectionnez un fichier :")
+        for idx, entry in enumerate(entries):
+            full_path = os.path.join(base_path, entry) if entry != ".. (parent directory)" else os.path.abspath(os.path.join(base_path, ".."))
+            type_str = "[DIR]" if os.path.isdir(full_path) else "[FILE]"
+            print(f"  {idx}. {entry} {type_str if entry != '.. (parent directory)' else ''}")
+        try:
+            choice = int(input("Votre choix (numéro) : ").strip())
+            if 0 <= choice < len(entries):
+                selected = entries[choice]
+                if selected == ".. (parent directory)":
+                    base_path = os.path.abspath(os.path.join(base_path, ".."))
+                    continue
+                selected_path = os.path.join(base_path, selected)
+                if os.path.isdir(selected_path):
+                    base_path = selected_path
+                    continue
+                else:
+                    return selected_path
+            else:
+                print("Choix invalide.")
+        except Exception:
+            print("Entrée invalide.")
+
 if __name__ == "__main__":
     print(r"""
                 ████████╗██╗  ██╗ █████╗ ██╗     ██╗     ██╗██╗   ██╗███╗   ███╗                          
@@ -99,7 +129,7 @@ if __name__ == "__main__":
     print("3. Remove signature from a file (restore original)")
     action = input("Your choice (1/2/3): ").strip()
     if action == "1":
-        file_path = input("File path to sign: ").strip()
+        file_path = select_file_or_folder()
         backup_choice = input("Do you want to create a backup of the original file before signing? (y/n): ").strip().lower()
         if backup_choice == 'y':
             import shutil
@@ -110,7 +140,7 @@ if __name__ == "__main__":
         append_signature(file_path, secret_key)
         print("Signature appended to the file.")
     elif action == "2":
-        file_path = input("File path to verify: ").strip()
+        file_path = select_file_or_folder()
         secret_key = input("Secret key used for signing: ").strip()
         valid, meta = verify_signature(file_path, secret_key)
         if valid:
@@ -127,7 +157,7 @@ Signature verification failed. The file may have been tampered with or the secre
 Please check the file integrity and try again.
 """)
     elif action == "3":
-        file_path = input("File path to remove signature from: ").strip()
+        file_path = select_file_or_folder()
         MARKER = b'--THALLIUM-META--'
         with open(file_path, 'rb') as f:
             content = f.read()

@@ -1,5 +1,3 @@
-
-
 # --- Dépendances internes ---
 import os
 import sys
@@ -234,6 +232,42 @@ def verify_and_decrypt(filepath, key):
         process_decrypt_file(filepath, key, delete_confirmed, keyfile_to_delete if delete_confirmed else None)
 
 
+def select_file_or_folder(base_path="."):
+    import os
+    exclude_files = {"authenticator.py", "bruteforce_signature.py", "bruteforce.py", "cleaner.py", "decryptor.py", "encryptor.py", "LICENSE", "README.md", "secure_bundle.py", "test.py"}
+    entries = [f for f in os.listdir(base_path) if not f.startswith(".") and f not in exclude_files]
+    entries = sorted(entries, key=lambda x: (os.path.isdir(os.path.join(base_path, x)), x.lower()), reverse=True)
+    entries = [".. (parent directory)"] + entries
+    while True:
+        print("\nSélectionnez un fichier ou dossier :")
+        for idx, entry in enumerate(entries):
+            full_path = os.path.join(base_path, entry) if entry != ".. (parent directory)" else os.path.abspath(os.path.join(base_path, ".."))
+            type_str = "[DIR]" if os.path.isdir(full_path) else "[FILE]"
+            print(f"  {idx}. {entry} {type_str if entry != '.. (parent directory)' else ''}")
+        try:
+            choice = int(input("Votre choix (numéro) : ").strip())
+            if 0 <= choice < len(entries):
+                selected = entries[choice]
+                if selected == ".. (parent directory)":
+                    base_path = os.path.abspath(os.path.join(base_path, ".."))
+                    entries = [f for f in os.listdir(base_path) if not f.startswith(".") and f not in exclude_files]
+                    entries = sorted(entries, key=lambda x: (os.path.isdir(os.path.join(base_path, x)), x.lower()), reverse=True)
+                    entries = [".. (parent directory)"] + entries
+                    continue
+                selected_path = os.path.join(base_path, selected)
+                if os.path.isdir(selected_path):
+                    base_path = selected_path
+                    entries = [f for f in os.listdir(base_path) if not f.startswith(".") and f not in exclude_files]
+                    entries = sorted(entries, key=lambda x: (os.path.isdir(os.path.join(base_path, x)), x.lower()), reverse=True)
+                    entries = [".. (parent directory)"] + entries
+                    continue
+                else:
+                    return selected_path
+            else:
+                print("Choix invalide.")
+        except Exception:
+            print("Entrée invalide.")
+
 def main():
     print("""
 ==== Secure Bundle (Encrypt + Sign) ====
@@ -243,7 +277,8 @@ def main():
     action = input("your choice (1/2): ").strip()
     if action == "1":
         import os
-        file_path = input("File or directory to encrypt and sign: ").strip()
+        print("\n--- Sélection du fichier ou dossier à chiffrer et signer ---")
+        file_path = select_file_or_folder()
         key_mode = input("Do you want to provide the key (1) or generate and save it in a .key file (2)? (1/2): ").strip()
         if key_mode == '2':
             import base64
@@ -261,7 +296,8 @@ def main():
             key = input("Encryption/signature key: ").strip()
         encrypt_and_sign(file_path, key)
     elif action == "2":
-        file_path = input("File to verify and decrypt: ").strip()
+        print("\n--- Sélection du fichier ou dossier à vérifier et déchiffrer ---")
+        file_path = select_file_or_folder()
         key_mode = input("Is the key in a .key file? (y/N): ").strip().lower()
         if key_mode == 'y':
             # Always look for the key as the original file name with .key (not .enc.key)
@@ -278,13 +314,6 @@ def main():
                 keyfile = file_path[:-4] + '.key'
             else:
                 keyfile = file_path + '.key'
-            import base64
-            def is_valid_key(keystr):
-                try:
-                    key_bytes = base64.urlsafe_b64decode(keystr.encode())
-                    return len(key_bytes) == 32
-                except Exception:
-                    return False
             while True:
                 if not os.path.isfile(keyfile):
                     print(f"Key file not found at: {keyfile}")

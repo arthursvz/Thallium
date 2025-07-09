@@ -31,6 +31,50 @@ def encrypt_file(filepath: str, password: str, output_dir: str, use_salt=True):
     with open(outpath, 'wb') as f:
         f.write(salt + nonce + encrypted if use_salt else nonce + encrypted)
     print(f"Encrypted file: {outpath}")
+def select_file_or_folder():
+    import os
+    import sys
+    exclude_files = {"authenticator.py", "bruteforce_signature.py", "bruteforce.py", "cleaner.py", "decryptor.py", "encryptor.py", "LICENSE", "README.md", "secure_bundle.py", "test.py"}
+    base_path = '.'
+    entries = [f for f in os.listdir(base_path) if not f.startswith(".") and f not in exclude_files]
+    entries = sorted(entries, key=lambda x: (os.path.isdir(os.path.join(base_path, x)), x.lower()), reverse=True)
+    entries = [".. (parent directory)"] + entries
+    while True:
+        print("\nSélectionnez un fichier ou dossier à chiffrer :")
+        for i, entry in enumerate(entries):
+            full_path = os.path.join(base_path, entry) if entry != ".. (parent directory)" else os.path.abspath(os.path.join(base_path, ".."))
+            type_str = "[DIR]" if os.path.isdir(full_path) else "[FILE]"
+            print(f"  [{i}] {entry} {type_str if entry != '.. (parent directory)' else ''}")
+        idx = input("Numéro : ")
+        try:
+            idx = int(idx)
+            selected = entries[idx]
+            if selected == ".. (parent directory)":
+                base_path = os.path.abspath(os.path.join(base_path, ".."))
+                entries = [f for f in os.listdir(base_path) if not f.startswith(".") and f not in exclude_files]
+                entries = sorted(entries, key=lambda x: (os.path.isdir(os.path.join(base_path, x)), x.lower()), reverse=True)
+                entries = [".. (parent directory)"] + entries
+                continue
+            selected_path = os.path.join(base_path, selected)
+            if os.path.isdir(selected_path):
+                subentries = [f for f in os.listdir(selected_path) if not f.startswith(".") and f not in exclude_files]
+                print(f"Dossier '{selected}' sélectionné. Choisissez un fichier ou validez pour tout le dossier :")
+                for j, sub in enumerate(subentries):
+                    print(f"  [{j}] {sub}")
+                subidx = input("Numéro (laisser vide pour tout le dossier) : ")
+                if subidx.strip() == '':
+                    return selected_path, True
+                try:
+                    subidx = int(subidx)
+                    selected_path = os.path.join(selected_path, subentries[subidx])
+                    return selected_path, False
+                except (ValueError, IndexError):
+                    print("Numéro invalide.")
+                    continue
+            return selected_path, False
+        except (ValueError, IndexError):
+            print("Numéro invalide.")
+            continue
 if __name__ == "__main__":
     # Set data root and output directory to current directory
     DATA_ROOT = os.path.abspath(os.getcwd())
@@ -66,49 +110,10 @@ ________________________________________________________________________________
 _____________________________________________________________________________________                                              
 """)
     import base64
-    choice = input("Do you want to encrypt a file or a folder? (f/d): ").strip().lower()
-    if choice == 'f':
-        filepath = input("Path to the file to encrypt (relative to current directory): ").strip()
-        abs_filepath = os.path.join(DATA_ROOT, filepath)
-        if not os.path.isfile(abs_filepath):
-            print("File not found.")
-            exit(1)
-        confirm = input(f"Do you confirm the encryption of '{abs_filepath}'? (y/n): ").lower()
-        if confirm != 'y':
-            print("Operation cancelled.")
-            exit(0)
-        keyfile = None
-        key_mode = input("Do you want to set the key yourself? (y/n): ").strip().lower()
-        if key_mode == 'y':
-            password = getpass("Enter the encryption key: ")
-            password2 = getpass("Confirm the encryption key: ")
-            if password != password2:
-                print("Keys do not match.")
-                exit(1)
-        else:
-            password = base64.urlsafe_b64encode(os.urandom(32)).decode()
-            keyfile = abs_filepath + '.key'
-            with open(keyfile, 'w') as f:
-                f.write(password)
-            print(f"Key generated and saved in: {keyfile}")
-        encrypt_file(abs_filepath, password, OUTPUT_ROOT, use_salt)
-        # Demander suppression du fichier original
-        delete_choice = input("\nVoulez-vous supprimer le fichier original pour ne conserver que le fichier chiffré et la clef (si elle est dans un fichier) ? (y/n): ").strip().lower()
-        if delete_choice == 'y':
-            print("\nATTENTION : Si vous supprimez le fichier original et perdez la clef, il sera impossible de récupérer vos données !")
-            confirm_delete = input("Confirmez-vous la suppression du fichier original ? (y/n): ").strip().lower()
-            if confirm_delete == 'y':
-                try:
-                    os.remove(abs_filepath)
-                    print(f"Fichier original supprimé : {abs_filepath}")
-                except Exception as e:
-                    print(f"Erreur lors de la suppression : {e}")
-            else:
-                print("Suppression annulée.")
-        else:
-            print("Le fichier original a été conservé.")
-    elif choice == 'd':
-        dirpath = input("Path to the folder to encrypt (relative to current directory): ").strip()
+    # Sélection interactive
+    selected, is_folder = select_file_or_folder()
+    if is_folder:
+        dirpath = selected
         abs_dirpath = os.path.join(DATA_ROOT, dirpath)
         if not os.path.isdir(abs_dirpath):
             print("Folder not found.")
@@ -137,7 +142,6 @@ ________________________________________________________________________________
                 keyfile_paths.append(keyfile)
                 return pwd
         elif key_mode == '3':
-            # Auto-generate one key for the whole folder, save it in a file
             password = base64.urlsafe_b64encode(os.urandom(32)).decode()
             keyfile = os.path.join(abs_dirpath, 'FOLDER.key')
             with open(keyfile, 'w') as f:
@@ -176,6 +180,42 @@ ________________________________________________________________________________
         else:
             print("Les fichiers originaux ont été conservés.")
     else:
-        print("Invalid choice. Please answer with 'f' or 'd'.")
-        sys.exit(1)
-        sys.exit(1)
+        filepath = selected
+        abs_filepath = os.path.join(DATA_ROOT, filepath)
+        if not os.path.isfile(abs_filepath):
+            print("File not found.")
+            exit(1)
+        confirm = input(f"Do you confirm the encryption of '{abs_filepath}'? (y/n): ").lower()
+        if confirm != 'y':
+            print("Operation cancelled.")
+            exit(0)
+        keyfile = None
+        key_mode = input("Do you want to set the key yourself? (y/n): ").strip().lower()
+        if key_mode == 'y':
+            password = getpass("Enter the encryption key: ")
+            password2 = getpass("Confirm the encryption key: ")
+            if password != password2:
+                print("Keys do not match.")
+                exit(1)
+        else:
+            password = base64.urlsafe_b64encode(os.urandom(32)).decode()
+            keyfile = abs_filepath + '.key'
+            with open(keyfile, 'w') as f:
+                f.write(password)
+            print(f"Key generated and saved in: {keyfile}")
+        encrypt_file(abs_filepath, password, OUTPUT_ROOT, use_salt)
+        # Demander suppression du fichier original
+        delete_choice = input("\nVoulez-vous supprimer le fichier original pour ne conserver que le fichier chiffré et la clef (si elle est dans un fichier) ? (y/n): ").strip().lower()
+        if delete_choice == 'y':
+            print("\nATTENTION : Si vous supprimez le fichier original et perdez la clef, il sera impossible de récupérer vos données !")
+            confirm_delete = input("Confirmez-vous la suppression du fichier original ? (y/n): ").strip().lower()
+            if confirm_delete == 'y':
+                try:
+                    os.remove(abs_filepath)
+                    print(f"Fichier original supprimé : {abs_filepath}")
+                except Exception as e:
+                    print(f"Erreur lors de la suppression : {e}")
+            else:
+                print("Suppression annulée.")
+        else:
+            print("Le fichier original a été conservé.")

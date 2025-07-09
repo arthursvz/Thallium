@@ -154,9 +154,38 @@ def init_counter(counter):
     global tested_counter
     tested_counter = counter
 
+def select_file_or_folder():
+    import os
+    import sys
+    entries = [f for f in os.listdir('.') if not f.startswith('.')]
+    print("Sélectionnez un fichier ou dossier à exploiter :")
+    for i, entry in enumerate(entries):
+        print(f"  [{i}] {entry}")
+    idx = input("Numéro : ")
+    try:
+        idx = int(idx)
+        selected = entries[idx]
+    except (ValueError, IndexError):
+        print("Numéro invalide.")
+        sys.exit(1)
+    if os.path.isdir(selected):
+        subentries = [f for f in os.listdir(selected) if not f.startswith('.')]
+        print(f"Dossier '{selected}' sélectionné. Choisissez un fichier :")
+        for j, sub in enumerate(subentries):
+            print(f"  [{j}] {sub}")
+        subidx = input("Numéro : ")
+        try:
+            subidx = int(subidx)
+            selected = os.path.join(selected, subentries[subidx])
+        except (ValueError, IndexError):
+            print("Numéro invalide.")
+            sys.exit(1)
+    return selected
+
 def main():
     print(r"""
 _____________________________________________________________________________________________________
+|                                                                                                   |
 |                ████████╗██╗  ██╗ █████╗ ██╗     ██╗     ██╗██╗   ██╗███╗   ███╗                   |
 |                ╚══██╔══╝██║  ██║██╔══██╗██║     ██║     ██║██║   ██║████╗ ████║                   |
 |                   ██║   ███████║███████║██║     ██║     ██║██║   ██║██╔████╔██║                   |
@@ -186,6 +215,10 @@ ________________________________________________________________________________
     args = sys.argv[1:]
     debug_mode = 'silent'
     debug_every = 10000
+    if len(args) < 1:
+        enc_path = select_file_or_folder()
+    else:
+        enc_path = args[0]
     if "-debug" in args:
         debug_mode = 'debug'
         args.remove("-debug")
@@ -197,9 +230,6 @@ ________________________________________________________________________________
         if len(args) > idx and args[idx].isdigit():
             debug_every = int(args[idx])
             args.pop(idx)
-    if len(args) < 1:
-        sys.exit(1)
-    enc_path = args[0]
     min_len = int(args[1]) if len(args) > 1 else 1
     max_len = int(args[2]) if len(args) > 2 else 20
     default_charset = string.ascii_letters + string.digits + string.punctuation

@@ -155,11 +155,19 @@ ________________________________________________________________________________
         debug_mode = 'call'
         args.remove("-call")
     if len(args) < 1:
-        sys.exit(1)
-    file_path = args[0]
-    min_len = int(args[1]) if len(args) > 1 else 4
-    max_len = int(args[2]) if len(args) > 2 else 6
-    charset = args[3] if len(args) > 3 else string.ascii_letters + string.digits + string.punctuation
+        print("Aucun fichier signé fourni en argument.")
+        file_path = select_file_or_folder()
+        min_len = int(input("Longueur minimale de la clé (défaut 4) : ") or 4)
+        max_len = int(input("Longueur maximale de la clé (défaut 6) : ") or 6)
+        charset = input("Jeu de caractères (laisser vide pour lettres+chiffres+ponctuation) : ")
+        if not charset:
+            import string
+            charset = string.ascii_letters + string.digits + string.punctuation
+    else:
+        file_path = args[0]
+        min_len = int(args[1]) if len(args) > 1 else 4
+        max_len = int(args[2]) if len(args) > 2 else 6
+        charset = args[3] if len(args) > 3 else string.ascii_letters + string.digits + string.punctuation
     print(f"Bruteforcing {file_path} with charset '{charset}' and length {min_len}-{max_len}")
     # Passage du mode via variable d'environnement
     import os
@@ -175,6 +183,43 @@ def test_manual_key():
         print(f"[MANUAL TEST] La clé '{key}' est VALIDE pour {file_path}.")
     else:
         print(f"[MANUAL TEST] La clé '{key}' est INVALIDE pour {file_path}.")
+
+def select_file_or_folder(base_path="."):
+    import os
+    exclude_files = {"authenticator.py", "bruteforce_signature.py", "bruteforce.py", "cleaner.py", "decryptor.py", "encryptor.py", "LICENSE", "README.md", "secure_bundle.py", "test.py"}
+    entries = [f for f in os.listdir(base_path) if not f.startswith(".") and f not in exclude_files]
+    entries = sorted(entries, key=lambda x: (os.path.isdir(os.path.join(base_path, x)), x.lower()), reverse=True)
+    entries = [".. (parent directory)"] + entries
+    while True:
+        print("\nSélectionnez un fichier signé à bruteforcer :")
+        for idx, entry in enumerate(entries):
+            full_path = os.path.join(base_path, entry) if entry != ".. (parent directory)" else os.path.abspath(os.path.join(base_path, ".."))
+            type_str = "[DIR]" if os.path.isdir(full_path) else "[FILE]"
+            print(f"  {idx}. {entry} {type_str if entry != '.. (parent directory)' else ''}")
+        try:
+            choice = int(input("Votre choix (numéro) : ").strip())
+            if 0 <= choice < len(entries):
+                selected = entries[choice]
+                if selected == ".. (parent directory)":
+                    base_path = os.path.abspath(os.path.join(base_path, ".."))
+                    entries = [f for f in os.listdir(base_path) if not f.startswith(".") and f not in exclude_files]
+                    entries = sorted(entries, key=lambda x: (os.path.isdir(os.path.join(base_path, x)), x.lower()), reverse=True)
+                    entries = [".. (parent directory)"] + entries
+                    continue
+                selected_path = os.path.join(base_path, selected)
+                if os.path.isdir(selected_path):
+                    # Entrer dans le dossier
+                    base_path = selected_path
+                    entries = [f for f in os.listdir(base_path) if not f.startswith(".") and f not in exclude_files]
+                    entries = sorted(entries, key=lambda x: (os.path.isdir(os.path.join(base_path, x)), x.lower()), reverse=True)
+                    entries = [".. (parent directory)"] + entries
+                    continue
+                else:
+                    return selected_path
+            else:
+                print("Choix invalide.")
+        except Exception:
+            print("Entrée invalide.")
 
 if __name__ == "__main__":
     test_manual_key()

@@ -48,6 +48,47 @@ def try_decrypt(filedata, password_candidate):
         print("Erreur de déchiffrement :", e)
         return None
 
+def select_file_or_folder(base_path="."):
+    import os
+    import sys
+    exclude_files = {"authenticator.py", "bruteforce_signature.py", "bruteforce.py", "cleaner.py", "decryptor.py", "encryptor.py", "LICENSE", "README.md", "secure_bundle.py", "test.py"}
+    while True:
+        entries = [f for f in os.listdir(base_path) if not f.startswith(".") and f not in exclude_files]
+        entries = sorted(entries, key=lambda x: (os.path.isdir(os.path.join(base_path, x)), x.lower()), reverse=True)
+        entries = [".. (parent directory)"] + entries
+        print("\nSélectionnez un fichier ou dossier à déchiffrer :")
+        for i, entry in enumerate(entries):
+            full_path = os.path.join(base_path, entry) if entry != ".. (parent directory)" else os.path.abspath(os.path.join(base_path, ".."))
+            type_str = "[DIR]" if os.path.isdir(full_path) else "[FILE]"
+            print(f"  [{i}] {entry} {type_str if entry != '.. (parent directory)' else ''}")
+        idx = input("Numéro : ")
+        try:
+            idx = int(idx)
+            selected = entries[idx]
+            if selected == ".. (parent directory)":
+                base_path = os.path.abspath(os.path.join(base_path, ".."))
+                continue
+            selected_path = os.path.join(base_path, selected)
+            if os.path.isdir(selected_path):
+                subentries = [f for f in os.listdir(selected_path) if not f.startswith(".") and f not in exclude_files]
+                print(f"Dossier '{selected}' sélectionné. Choisissez un fichier ou validez pour tout le dossier :")
+                for j, sub in enumerate(subentries):
+                    print(f"  [{j}] {sub}")
+                subidx = input("Numéro (laisser vide pour tout le dossier) : ")
+                if subidx.strip() == '':
+                    return selected_path, True
+                try:
+                    subidx = int(subidx)
+                    selected_path = os.path.join(selected_path, subentries[subidx])
+                    return selected_path, False
+                except (ValueError, IndexError):
+                    print("Numéro invalide.")
+                    continue
+            return selected_path, False
+        except (ValueError, IndexError):
+            print("Numéro invalide.")
+            continue
+
 if __name__ == "__main__":
     # Set data root to current directory
     DATA_ROOT = os.path.abspath(os.getcwd())
@@ -78,10 +119,13 @@ ________________________________________________________________________________
 _____________________________________________________________________________________                 
 """)
     import sys
-    choice = input("Do you want to decrypt a file or a folder? (f/d): ").strip().lower()
-    if choice == 'f':
-        encrypted_file = input("Path to the encrypted file (relative to current directory): ").strip()
+    # Sélection interactive
+    selected, is_folder = select_file_or_folder()
+    if not is_folder:
+        encrypted_file = selected
         abs_encrypted_file = os.path.join(DATA_ROOT, encrypted_file)
+        # ...existing code...
+        # (remplacer la demande de chemin par abs_encrypted_file)
         key_input_mode = input("Is the decryption key in a file? (y/n): ").strip().lower()
         if key_input_mode == 'y':
             # Try to automatically detect the key file
@@ -123,79 +167,8 @@ ________________________________________________________________________________
                         print(f"Deleted: {f}")
                     except Exception as e:
                         print(f"Error deleting {f}: {e}")
-    elif choice == 'd':
-        dirpath = input("Path to the folder to decrypt (relative to current directory): ").strip()
-        abs_dirpath = os.path.join(DATA_ROOT, dirpath)
-        if not os.path.isdir(abs_dirpath):
-            print("Folder not found.")
-            sys.exit(1)
-        confirm = input(f"Do you confirm the decryption of all .enc files in the folder '{abs_dirpath}'? (y/n): ").lower()
-        if confirm != 'y':
-            print("Operation cancelled.")
-            sys.exit(0)
-        key_mode = input("How were the files encrypted? Same key for all (1), different key for each file (2), or main key file (3)? (1/2/3): ").strip()
-        if key_mode == '1':
-            password = getpass("Enter the decryption key common to all files: ")
-            def get_password(_):
-                return password
-        elif key_mode == '2':
-            def get_password(fpath):
-                keyfile = os.path.splitext(fpath)[0] + '.key'
-                if not os.path.isfile(keyfile):
-                    print(f"Missing key for {fpath}: {keyfile}")
-                    return None
-                with open(keyfile, 'r') as f:
-                    return f.read().strip()
-        elif key_mode == '3':
-            # Try to find FOLDER.key in the folder
-            keyfile = os.path.join(abs_dirpath, 'FOLDER.key')
-            if not os.path.isfile(keyfile):
-                print(f"Main key file not found: {keyfile}")
-                sys.exit(1)
-            with open(keyfile, 'r') as f:
-                password = f.read().strip()
-            def get_password(_):
-                return password
-        else:
-            print("Invalid choice. Please answer with '1', '2', or '3'.")
-            sys.exit(1)
-        decrypted_files = []
-        for root, _, files in os.walk(abs_dirpath):
-            for name in files:
-                if not name.endswith('.enc'):
-                    continue
-                fpath = os.path.join(root, name)
-                # Get the original file name before encryption
-                if fpath.endswith('.enc'):
-                    original_name = fpath[:-4]
-                else:
-                    original_name = fpath
-                dirname = os.path.dirname(original_name)
-                basename = os.path.basename(original_name)
-                outpath = os.path.join(dirname, 'DECOD_' + basename)
-                pwd = get_password(fpath)
-                if not pwd:
-                    print(f"File skipped (missing key): {fpath}")
-                    continue
-                try:
-                    decrypt_file(fpath, pwd, outpath)
-                    print(f"Decrypted: {fpath} -> {outpath}")
-                    decrypted_files.append((fpath, original_name + '.key'))
-                except Exception as e:
-                    print(f"Error for {fpath}: {e}")
-        print("All files in the folder have been processed.")
-        # Offer to clean up associated .enc and .key files
-        resp = input("Do you want to delete the associated .enc and .key files? (y/N): ").strip().lower()
-        if resp == 'y':
-            for fenc, fkey in decrypted_files:
-                for f in [fenc, fkey]:
-                    if os.path.isfile(f):
-                        try:
-                            os.remove(f)
-                            print(f"Deleted: {f}")
-                        except Exception as e:
-                            print(f"Error deleting {f}: {e}")
     else:
-        print("Invalid choice. Please answer with 'f' or 'd'.")
-        sys.exit(1)
-        sys.exit(1)
+        dirpath = selected
+        abs_dirpath = os.path.join(DATA_ROOT, dirpath)
+        # ...existing code...
+        # (remplacer la demande de chemin par abs_dirpath)
