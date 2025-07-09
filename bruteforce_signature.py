@@ -1,4 +1,3 @@
-
 import sys
 import hashlib
 import itertools
@@ -67,8 +66,6 @@ def try_signature_args(args):
             print(f"[DEBUG] Erreur lors du debug: {e}")
     if result:
         # Arrêt immédiat de tous les workers si la clé est trouvée
-        import os
-        os._exit(0)
         return pwd
     return None
 
@@ -170,5 +167,15 @@ ________________________________________________________________________________
     os.environ['THALLIUM_DEBUG_EVERY'] = str(debug_every)
     bruteforce_signature(file_path, charset, min_len, max_len)
 
+def test_manual_key():
+    file_path = "fichier.pdf"
+    key = "cbaa"
+    result = verify_signature_with_key(file_path, key)
+    if result:
+        print(f"[MANUAL TEST] La clé '{key}' est VALIDE pour {file_path}.")
+    else:
+        print(f"[MANUAL TEST] La clé '{key}' est INVALIDE pour {file_path}.")
+
 if __name__ == "__main__":
+    test_manual_key()
     main()
