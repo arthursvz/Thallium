@@ -9,37 +9,80 @@
                                     |___/ 
 </pre>
 
+
 # Thallium 🔒✨
 
 Bienvenue sur **Thallium** !
 
-Un outil simple, moderne et sécurisé pour chiffrer/déchiffrer vos fichiers et dossiers avec AES-GCM. Protégez vos données en toute simplicité, sans prise de tête ! 😎🔑
+Suite d'outils modernes et sécurisés pour la gestion, la protection et l'authentification de vos fichiers. Chaque script a un usage précis, détaillé ci-dessous.
 
 ---
 
 
-## 🚀 Fonctionnalités
 
-- 🔐 Chiffrez ou déchiffrez des fichiers et dossiers (récursivement)
-- 🗝️ Choisissez une clé unique, une clé par fichier, ou une clé auto-générée par dossier
-- 🤖 Interface en ligne de commande conviviale
-- 🐍 100% Python, aucune installation complexe
-- 📝 Suppression sécurisée des fichiers originaux après chiffrement (optionnelle)
-- 🧹 `cleaner.py` : Nettoyez les fichiers temporaires ou sensibles facilement
-- 🕵️ `bruteforce.py` : Testez la robustesse de vos mots de passe (usage pédagogique)
-- 🛡️ `authenticator.py` : Ajoutez une couche d'authentification à vos scripts
+## 🚀 Fonctionnalités principales
+
+### `encryptor.py` — Chiffrement/déchiffrement
+- Chiffre ou déchiffre des fichiers et dossiers (récursivement) avec AES-GCM
+- Choix de la clé : unique, par fichier, ou auto-générée par dossier
+- Suppression sécurisée des fichiers originaux après chiffrement (optionnelle)
+- Interface CLI conviviale
+
+### `decryptor.py` — Déchiffrement rapide
+- Déchiffre les fichiers chiffrés par `encryptor.py`
+- Restaure les fichiers à leur état d'origine
+
+### `cleaner.py` — Nettoyage sécurisé
+- Supprime de façon sécurisée les fichiers temporaires ou sensibles
+- Peut effacer de manière récursive un dossier ou une liste de fichiers
+- Idéal pour garantir la non-récupérabilité des données supprimées
+
+### `bruteforce.py` — Test de robustesse de mot de passe
+- Permet de tester la robustesse d'un mot de passe par attaque brute-force (usage pédagogique)
+- Peut servir à sensibiliser sur l'importance de mots de passe forts
+
+### `authenticator.py` — Signature et vérification de fichiers
+- Ajoute une signature cryptographique et des métadonnées à n'importe quel fichier
+- Permet de vérifier l'intégrité et l'authenticité d'un fichier signé
+- Fonctionne sur tout type de fichier (texte, binaire, image, etc.)
+- Possibilité de restaurer le fichier original (suppression de la signature)
+
+### `test.py` — Tests unitaires et de validation
+- Permet de valider le bon fonctionnement des modules principaux
+- Peut être adapté pour vos propres scénarios de test
 
 ---
+
 
 ## 🛠️ Utilisation rapide
 
 1. Placez vos fichiers/dossiers à protéger dans le dossier de travail
-2. Lancez le script :
-   ```bash
-   python3 encryptor.py
-   ```
-3. Suivez les instructions à l'écran (choix du fichier/dossier, gestion des clés, suppression...)
-4. Les fichiers chiffrés auront l'extension `.enc` et les clés peuvent être sauvegardées à côté 🔑
+2. Lancez le script souhaité selon votre besoin :
+   - Chiffrement :
+     ```bash
+     python3 encryptor.py
+     ```
+   - Déchiffrement :
+     ```bash
+     python3 decryptor.py
+     ```
+   - Nettoyage sécurisé :
+     ```bash
+     python3 cleaner.py
+     ```
+   - Test de robustesse :
+     ```bash
+     python3 bruteforce.py
+     ```
+   - Authentification (signature/vérification) :
+     ```bash
+     python3 authenticator.py
+     ```
+   - Tests :
+     ```bash
+     python3 test.py
+     ```
+3. Suivez les instructions à l'écran pour chaque outil.
 
 ---
 
@@ -49,6 +92,7 @@ Un outil simple, moderne et sécurisé pour chiffrer/déchiffrer vos fichiers et
 - Le projet est open source : auditez-le, améliorez-le, partagez-le !
 
 ---
+
 
 ## 💻 Compatibilité
 
@@ -61,6 +105,7 @@ Un outil simple, moderne et sécurisé pour chiffrer/déchiffrer vos fichiers et
 ---
 
 
+
 ## 📄 Licence
 
 Ce projet est sous licence GNU AGPL v3. Utilisation libre, modification et partage encouragés, dans le respect de la communauté du logiciel libre !
@@ -68,10 +113,12 @@ Voir le fichier LICENSE pour les détails complets.
 
 ---
 
+
 ## 👨‍💻 Auteur
 
 Arthur SAUVEZIE — 2025
 
 ---
 
-✨ Bon chiffrement avec Thallium ! ✨
+
+✨ Bon chiffrement et bonne sécurité avec Thallium ! ✨
