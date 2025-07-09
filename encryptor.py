@@ -42,28 +42,28 @@ if __name__ == "__main__":
         sys.argv.remove("-light")
 
     print(r"""
-    _________________________________________________________________
-    |     _____  _   _   ___   _      _     _____  _   _ ___  ___   |
-    |    |_   _|| | | | / _ \ | |    | |   |_   _|| | | ||  \/  |   |
-    |      | |  | |_| |/ /_\ \| |    | |     | |  | | | || .  . |   |
-    |      | |  |  _  ||  _  || |    | |     | |  | | | || |\/| |   |
-    |      | |  | | | || | | || |____| |_____| |_ | |_| || |  | |   |
-    |      \_/  \_| |_/|_| |_/\_____/\_____/\___/  \___/ \_|  |_/   |
-    |       _____                                  _                |
-    |      |  ___|                                | |               |
-    |      | |__  _ __    ___  _ __  _   _  _ __  | |_  ___   _ __  |
-    |      |  __|| '_ \  / __|| '__|| | | || '_ \ | __|/ _ \ | '__| |
-    |      | |___| | | || (__ | |   | |_| || |_) || |_| (_) || |    |
-    |      \____/|_| |_| \___||_|    \__, || .__/  \__|\___/ |_|    |
-    |                                 __/ || |                      |
-    |                                |___/ |_|                      |
-    |  _____  _   _   ___   ___  ___  ___  ___  ___  ___  ___  ___  |
-    |  Encryptor - A tool for encrypting files and folders          |
-    |  Version 1.0 - By Arthur SAUVEZIE                             |
-    |  License: Apache 2.0 - https://www.apache.org/                |
-    |  Warning: Use this tool at your own risk.                     |
-    |  Usage: python3 encryptor.py                                  |
-    _________________________________________________________________                                              
+_____________________________________________________________________________________
+|        ████████╗██╗  ██╗ █████╗ ██╗     ██╗     ██╗██╗   ██╗███╗   ███╗           |      
+|        ╚══██╔══╝██║  ██║██╔══██╗██║     ██║     ██║██║   ██║████╗ ████║           |     
+|           ██║   ███████║███████║██║     ██║     ██║██║   ██║██╔████╔██║           |      
+|           ██║   ██╔══██║██╔══██║██║     ██║     ██║██║   ██║██║╚██╔╝██║           |      
+|           ██║   ██║  ██║██║  ██║███████╗███████╗██║╚██████╔╝██║ ╚═╝ ██║           |      
+|           ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝ ╚═════╝ ╚═╝     ╚═╝           |      
+|                                                                                   |  
+|    ███████╗███╗   ██╗ ██████╗██████╗ ██╗   ██╗██████╗ ████████╗ ██████╗ ██████╗   | 
+|    ██╔════╝████╗  ██║██╔════╝██╔══██╗╚██╗ ██╔╝██╔══██╗╚══██╔══╝██╔═══██╗██╔══██╗  |
+|    █████╗  ██╔██╗ ██║██║     ██████╔╝ ╚████╔╝ ██████╔╝   ██║   ██║   ██║██████╔╝  |
+|    ██╔══╝  ██║╚██╗██║██║     ██╔══██╗  ╚██╔╝  ██╔═══╝    ██║   ██║   ██║██╔══██╗  |
+|    ███████╗██║ ╚████║╚██████╗██║  ██║   ██║   ██║        ██║   ╚██████╔╝██║  ██║  |
+|    ╚══════╝╚═╝  ╚═══╝ ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝        ╚═╝    ╚═════╝ ╚═╝  ╚═╝  |
+|__ __ __ _  _____ _ __ _ __   _ __ _ ____ _ __ _  ____   _ ___  __ ___  _ ___  _ __|
+|                                                                                   |
+|  Encryptor - A tool for encrypting files and folders                              |
+|  Version 1.0 - By Arthur SAUVEZIE                                                 |
+|  License: GNU AFFERO 3                                                            |
+|  Warning: Use this tool at your own risk.                                         |
+|  Usage: python3 encryptor.py                                                      |
+_____________________________________________________________________________________                                              
 """)
     import base64
     choice = input("Do you want to encrypt a file or a folder? (f/d): ").strip().lower()
@@ -77,6 +77,7 @@ if __name__ == "__main__":
         if confirm != 'y':
             print("Operation cancelled.")
             exit(0)
+        keyfile = None
         key_mode = input("Do you want to set the key yourself? (y/n): ").strip().lower()
         if key_mode == 'y':
             password = getpass("Enter the encryption key: ")
@@ -91,6 +92,21 @@ if __name__ == "__main__":
                 f.write(password)
             print(f"Key generated and saved in: {keyfile}")
         encrypt_file(abs_filepath, password, OUTPUT_ROOT, use_salt)
+        # Demander suppression du fichier original
+        delete_choice = input("\nVoulez-vous supprimer le fichier original pour ne conserver que le fichier chiffré et la clef (si elle est dans un fichier) ? (y/n): ").strip().lower()
+        if delete_choice == 'y':
+            print("\nATTENTION : Si vous supprimez le fichier original et perdez la clef, il sera impossible de récupérer vos données !")
+            confirm_delete = input("Confirmez-vous la suppression du fichier original ? (y/n): ").strip().lower()
+            if confirm_delete == 'y':
+                try:
+                    os.remove(abs_filepath)
+                    print(f"Fichier original supprimé : {abs_filepath}")
+                except Exception as e:
+                    print(f"Erreur lors de la suppression : {e}")
+            else:
+                print("Suppression annulée.")
+        else:
+            print("Le fichier original a été conservé.")
     elif choice == 'd':
         dirpath = input("Path to the folder to encrypt (relative to current directory): ").strip()
         abs_dirpath = os.path.join(DATA_ROOT, dirpath)
@@ -101,6 +117,7 @@ if __name__ == "__main__":
         if confirm != 'y':
             print("Operation cancelled.")
             exit(0)
+        keyfile_paths = []
         key_mode = input("Do you want to use the same key for all files (1), a different key for each file (2), or auto-generate a key and save it in a file (3)? (1/2/3): ").strip()
         if key_mode == '1':
             password = getpass("Enter the encryption key: ")
@@ -117,6 +134,7 @@ if __name__ == "__main__":
                 with open(keyfile, 'w') as f:
                     f.write(pwd)
                 print(f"Key generated and saved in: {keyfile}")
+                keyfile_paths.append(keyfile)
                 return pwd
         elif key_mode == '3':
             # Auto-generate one key for the whole folder, save it in a file
@@ -125,11 +143,13 @@ if __name__ == "__main__":
             with open(keyfile, 'w') as f:
                 f.write(password)
             print(f"Key generated and saved in: {keyfile}")
+            keyfile_paths.append(keyfile)
             def get_password(_):
                 return password
         else:
             print("Invalid choice. Please answer with '1', '2', or '3'.")
             sys.exit(1)
+        encrypted_files = []
         for root, _, files in os.walk(abs_dirpath):
             for name in files:
                 fpath = os.path.join(root, name)
@@ -137,7 +157,24 @@ if __name__ == "__main__":
                     continue  # Do not encrypt already encrypted files or keys
                 print(f"Encrypting: {fpath}")
                 encrypt_file(fpath, get_password(fpath), OUTPUT_ROOT, use_salt)
+                encrypted_files.append(fpath)
         print("All files in the folder and its subfolders have been encrypted.")
+        # Demander suppression des fichiers originaux
+        delete_choice = input("\nVoulez-vous supprimer TOUS les fichiers originaux pour ne conserver que les fichiers chiffrés et les clefs (si elles sont dans des fichiers) ? (y/n): ").strip().lower()
+        if delete_choice == 'y':
+            print("\nATTENTION : Si vous supprimez les fichiers originaux et perdez les clefs, il sera impossible de récupérer vos données !")
+            confirm_delete = input("Confirmez-vous la suppression de TOUS les fichiers originaux ? (y/n): ").strip().lower()
+            if confirm_delete == 'y':
+                for f in encrypted_files:
+                    try:
+                        os.remove(f)
+                        print(f"Fichier original supprimé : {f}")
+                    except Exception as e:
+                        print(f"Erreur lors de la suppression de {f} : {e}")
+            else:
+                print("Suppression annulée.")
+        else:
+            print("Les fichiers originaux ont été conservés.")
     else:
         print("Invalid choice. Please answer with 'f' or 'd'.")
         sys.exit(1)

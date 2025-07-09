@@ -11,15 +11,23 @@ def should_keep(filename):
     return False
 
 def confirm_and_delete(filepath):
-    resp = input(f"Supprimer '{filepath}' ? (o/N): ").strip().lower()
-    if resp == 'o':
+    import sys
+    if '-brute' in sys.argv:
         try:
             os.remove(filepath)
             print(f"Supprimé: {filepath}")
         except Exception as e:
             print(f"Erreur lors de la suppression de {filepath}: {e}")
     else:
-        print(f"Conservé: {filepath}")
+        resp = input(f"Supprimer '{filepath}' ? (o/N): ").strip().lower()
+        if resp == 'o':
+            try:
+                os.remove(filepath)
+                print(f"Supprimé: {filepath}")
+            except Exception as e:
+                print(f"Erreur lors de la suppression de {filepath}: {e}")
+        else:
+            print(f"Conservé: {filepath}")
 
 def clean_folder(folder):
     for root, _, files in os.walk(folder):
@@ -36,8 +44,9 @@ def clean_folder(folder):
 def main():
     import sys
     DATA_ROOT = os.path.abspath(os.getcwd())
-    if len(sys.argv) > 1:
-        rel_folder = sys.argv[1]
+    args = [a for a in sys.argv[1:] if not a.startswith('-')]
+    if args:
+        rel_folder = args[0]
         folder = os.path.join(DATA_ROOT, rel_folder)
     else:
         folder = DATA_ROOT

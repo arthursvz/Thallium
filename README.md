@@ -1,26 +1,77 @@
-# Thallium
+<pre>
+  _______ _    _        _ _ _             
+ |__   __| |  | |      | | (_)            
+    | |  | |__| | __ _ | | |_ _ __   __ _ 
+    | |  |  __  |/ _` || | | | '_ \ / _` |
+    | |  | |  | | (_| || | | | | | | (_| |
+    |_|  |_|  |_|\__,_||_|_|_|_| |_|\__, |
+                                     __/ |
+                                    |___/ 
+</pre>
 
-Thallium is a simple and secure toolkit for encrypting and decrypting files or folders using strong AES encryption. It is designed for users who want to protect their data with minimal setup and maximum flexibility.
+# Thallium 🔒✨
 
-## Features
-- Encrypt or decrypt files and folders (recursively)
-- Choose a single key, a key per file, or an auto-generated folder key
-- User-friendly command-line interface
-- No Python installation required when using executables
+Bienvenue sur **Thallium** !
 
-## How it works
-- Place your files and folders to protect in the `data/` directory.
-- Run the appropriate executable (`encryptor`, `decryptor`, etc.).
-- Follow the on-screen prompts to select files/folders and manage keys.
-- Encrypted files and key files are managed in the `data/` directory.
+Un outil simple, moderne et sécurisé pour chiffrer/déchiffrer vos fichiers et dossiers avec AES-GCM. Protégez vos données en toute simplicité, sans prise de tête ! 😎🔑
 
-## Platform-specific instructions
-Instructions for running Thallium on Linux, Windows, and Mac OS are provided in the dedicated sections below.
+---
 
-## Security Notice
-- Keep your keys safe! Losing a key means losing access to your data.
-- The project is open source and can be audited for security.
 
-## License
+## 🚀 Fonctionnalités
 
-This project is licensed under the Apache 2.0 License.
+- 🔐 Chiffrez ou déchiffrez des fichiers et dossiers (récursivement)
+- 🗝️ Choisissez une clé unique, une clé par fichier, ou une clé auto-générée par dossier
+- 🤖 Interface en ligne de commande conviviale
+- 🐍 100% Python, aucune installation complexe
+- 📝 Suppression sécurisée des fichiers originaux après chiffrement (optionnelle)
+- 🧹 `cleaner.py` : Nettoyez les fichiers temporaires ou sensibles facilement
+- 🕵️ `bruteforce.py` : Testez la robustesse de vos mots de passe (usage pédagogique)
+- 🛡️ `authenticator.py` : Ajoutez une couche d'authentification à vos scripts
+
+---
+
+## 🛠️ Utilisation rapide
+
+1. Placez vos fichiers/dossiers à protéger dans le dossier de travail
+2. Lancez le script :
+   ```bash
+   python3 encryptor.py
+   ```
+3. Suivez les instructions à l'écran (choix du fichier/dossier, gestion des clés, suppression...)
+4. Les fichiers chiffrés auront l'extension `.enc` et les clés peuvent être sauvegardées à côté 🔑
+
+---
+
+## ⚠️ Sécurité
+
+- **Gardez vos clés précieusement !** Sans la clé, vos données sont irrécupérables. 
+- Le projet est open source : auditez-le, améliorez-le, partagez-le !
+
+---
+
+## 💻 Compatibilité
+
+- Linux, Windows, MacOS (nécessite Python 3 et le module `cryptography`)
+- Installation des dépendances :
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+---
+
+
+## 📄 Licence
+
+Ce projet est sous licence GNU AGPL v3. Utilisation libre, modification et partage encouragés, dans le respect de la communauté du logiciel libre !
+Voir le fichier LICENSE pour les détails complets.
+
+---
+
+## 👨‍💻 Auteur
+
+Arthur SAUVEZIE — 2025
+
+---
+
+✨ Bon chiffrement avec Thallium ! ✨
